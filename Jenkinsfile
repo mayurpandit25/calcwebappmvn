@@ -6,7 +6,7 @@ pipeline {
     
     tools {
         maven 'xyz-maven'
-        //docker
+        //dockerTool 'docker'
     }
     
     stages {
@@ -28,10 +28,14 @@ pipeline {
         
         stage('docker') {
             steps {
+
+                sh 'docker images'
+
+                sh 'docker build -t calcwebappmvn:v1 .'
+`
+                echo "Docker Image Built Successfully!!"
                 
-                
-                
-                
+                sh 'docker images'
                 
                    // junit 'target/surefire-reports/*.xml'
 		           //     echo "Publishing JUnit reports"
