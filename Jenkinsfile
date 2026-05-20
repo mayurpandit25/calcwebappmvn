@@ -2,6 +2,10 @@ pipeline {
     agent {
         label 'linux' 
     }
+	    environment {
+        IMAGE_NAME = "calcwebappmvn:${BUILD_NUMBER}"
+    }
+
      // tools {
      //    maven 'xyz-maven'
      //    dockerTool 'my-docker'
@@ -30,7 +34,7 @@ pipeline {
 				sh 'docker ps'
                 sh 'docker images'
                // sh 'docker build -t calcwebappmvn:v1 .' 
-                sh 'docker build -t calcwebappmvn1:${env.BUILD_ID}v1 .'
+                sh 'docker build -t ${IMAGE_NAME} .'
                 echo "Docker Image Built Successfully!!"
                 sh 'docker images'
                    // junit 'target/surefire-reports/*.xml'
