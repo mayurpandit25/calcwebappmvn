@@ -31,6 +31,8 @@ pipeline {
         stage('docker') {
             steps {
 
+				sh 'systemctl start docker'
+
                 sh 'docker images'
 
                 sh 'docker build -t calcwebappmvn:v1 .'
