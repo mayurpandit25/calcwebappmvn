@@ -25,16 +25,13 @@ pipeline {
             }
         stage('docker') {
             steps {
+				sh 'which docker'
+				sh 'docker --version'
 				sh 'docker ps'
-
                 sh 'docker images'
-
                 sh 'docker build -t calcwebappmvn:v1 .'
-
                 echo "Docker Image Built Successfully!!"
-                
                 sh 'docker images'
-                
                    // junit 'target/surefire-reports/*.xml'
 		           //     echo "Publishing JUnit reports"
             }
