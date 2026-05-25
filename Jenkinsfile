@@ -9,7 +9,7 @@ pipeline {
       tools {
 		  maven 'xyz-maven'
      //    dockerTool 'my-docker'
-		  hudson.plugins.sonar.SonarRunnerInstallation 'sonar-install'
+		 // hudson.plugins.sonar.SonarRunnerInstallation 'sonar-install'
       }
     stages {
         stage('Git Checkout') {
@@ -20,10 +20,18 @@ pipeline {
             }
         }
 		stage('SonarQube analysis') {
-            steps {
+          
 		// Change this as per your Jenkins Configuration
-                withSonarQubeEnv('sonar-tok') {
-                    sh 'mvn package sonar:sonar'
+				steps { 
+					withSonarQubeEnv('sonar') { 
+						sh 'mvn clean verify sonar:sonar' 
+					
+				
+
+				
+				
+         //       withSonarQubeEnv('sonar-tok') {
+          //          sh 'mvn package sonar:sonar'
                 }
             }
         }
