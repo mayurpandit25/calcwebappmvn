@@ -11,5 +11,30 @@ pipeline {
                 sh 'terraform init'
             }
         }
+         stage('Terraform fmt-validate') {
+            steps {
+                sh '''
+                terraform fmt
+                terraform validate
+                '''
+            }
+        }
+         stage('Terraform plan') {
+            steps {
+                sh 'terraform plan'
+            }
+        }
+         stage('Terraform APPLY') {
+            steps {
+                sh 'terraform apply -auto-approve'
+            }
+        }
+
+
+
     }
+
+
+
+
 }
