@@ -3,6 +3,7 @@ pipeline {
         label 'ag-2'
     }
     environment {
+        cluster_name = "my-cluster-1"
         Region = "us-west-2"
         IMAGE_NAME = "calcwebappmvn:${BUILD_NUMBER}"
         my_aws_access = credentials('my-aws-cred')
@@ -93,7 +94,7 @@ pipeline {
 
         stage('kubeconfig setup') {
             steps {
-                sh 'aws eks update-kubeconfig --region ${Region} --name my-cluster'
+                sh 'aws eks update-kubeconfig --region ${Region} --name ${cluster_name}'
                 // sh '''kubectl create secret docker-registry my-ecr-secret-cbz \
                 //       --docker-server=964742912902.dkr.ecr.${Region}.amazonaws.com \
                 //       --docker-username=AWS \
