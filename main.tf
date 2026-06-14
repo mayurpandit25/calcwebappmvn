@@ -18,7 +18,7 @@ data "aws_vpc" "default" { // Fetch default VPC
 }
 variable "cluster_name" { // Variable for cluster name
   type    = string
-  default = "my-cluster-1"
+  default = "my-cluster-mp"
 
 }
 
