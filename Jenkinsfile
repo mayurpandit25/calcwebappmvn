@@ -1,31 +1,41 @@
 pipeline {
-    agent {
-        label 'ag-2'
-    }
-    environment {
-        cluster_name = "my-cluster-1"
-        Region = "us-west-2"
-        IMAGE_NAME = "calcwebappmvn:v1"
-        my_aws_access = credentials('my-aws-cred')
-    }
+    agent any
+
     tools {
-        maven 'xyz-maven'
+        maven 'maven1'
+    }
+
+    environment {
+        my_aws_credential = credentials('aws-access')
     }
 
     stages {
-
-        stage('Git Checkout') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/mayur-z/calcwebappmvn.git'
-                echo "Code Checked-out Successfully!!";
-                sh 'ls -la'
+                git 'https://github.com/mayurpandit25/calcwebappmvn.git'
             }
         }
 
-        stage('SonarQube analysis') {
+        stage('Build') {
+            steps {
+                sh '''
+                ls -la
+                mvn clean package
+                ls -la '''
+            }
+
+            post {
+                success {
+                    archiveArtifacts 'target/*.war'
+                    sh 'ls -la'
+                }
+            }
+        }
+
+        stage('sonarqube analysis') {
             steps {
                 withSonarQubeEnv('sonar') {
-                    sh 'mvn clean verify sonar:sonar'
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
@@ -48,105 +58,63 @@ pipeline {
                 }
             }
         }
- 
-        stage('Package Application .war') {
+
+        stage('next stage') {
             steps {
                 sh 'ls -la'
-                sh 'mvn clean'
-                sh 'mvn package'
-                echo "Maven Package Goal Executed Successfully!";
-                sh 'ls -la'
+                echo 'SonarQube analysis completed'
+               // sh 'cat target/sonar/report-task.txt'
             }
         }
-        stage('docker image build') {
+
+        stage('docker build') {
             steps {
-                sh 'which docker'
-                sh 'docker --version'
-                sh 'docker ps'
-                sh 'docker images'
-                //sh 'docker rmi -f ${docker images -q}'
-                //docker system prune -a
-                // sh 'docker build -t calcwebappmvn:v1 .' 
-                sh 'docker build -t ${IMAGE_NAME} .'
-                echo "Docker Image Built Successfully!!"
-                sh 'docker images'
+                sh '''
+                ls -la
+                docker build -t calc:v1 .
+                docker images
+                '''
             }
         }
 
-        stage('ECRLogin') {
+        stage('docker push to ECR') {
             steps {
-                sh 'aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 964742912902.dkr.ecr.us-west-2.amazonaws.com'
-                echo "Logged in to AWS ECR Successfully!!"
-
-                sh 'docker tag ${IMAGE_NAME} 964742912902.dkr.ecr.us-west-2.amazonaws.com/dev/calculator:v1'
-                echo "Docker Image Tagged Successfully!!"
-                sh 'docker images'
+                sh '''
+                aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 632295789918.dkr.ecr.us-west-2.amazonaws.com
+                docker tag calc:v1 632295789918.dkr.ecr.us-west-2.amazonaws.com/app_cal:latest
+                docker push 632295789918.dkr.ecr.us-west-2.amazonaws.com/app_cal:latest
+                '''
             }
         }
 
-        stage('Push to ECR') {
+        stage('deploy to kubernetes') {
             steps {
-                sh 'docker push 964742912902.dkr.ecr.us-west-2.amazonaws.com/dev/calculator:v1'
-                echo "Docker Image Pushed to ECR Successfully!!"
+                sh '''
+                aws eks update-kubeconfig --name my-cluster-mp --region us-west-2
+                kubectl apply -f calc-deployment-svc.yaml
+                kubectl get all
+                '''
             }
         }
 
-
-        stage('kubeconfig setup') {
+        stage('deployment verification') {
             steps {
-                sh 'aws eks update-kubeconfig --region ${Region} --name ${cluster_name}'
-                // sh '''kubectl create secret docker-registry my-ecr-secret-cbz \
-                //       --docker-server=964742912902.dkr.ecr.${Region}.amazonaws.com \
-                //       --docker-username=AWS \
-                //       --docker-password=$(aws ecr get-login-password --region ${Region})'''
-
-                
-                echo "Kubeconfig setup and secret creation completed successfully!!"
+                sh '''
+                kubectl get all
+                kubectl get pods
+                sleep 10
+                kubectl get svc -o wide
+                '''
             }
         }
-
-        stage('get all resources') {
-            steps {
-
-                sh 'kubectl get all'
-                sh 'kubectl get secrets'
-                echo "Verified access to EKS cluster successfully!!"
-
-                //sh 'kubectl apply -f k8s-deployment.yaml'
-                //echo "Application Deployed to EKS Successfully!!"
-            }
-        }
-
-        stage('deploy to eks') {
-            steps {
-
-                sh 'kubectl apply -f calc-deployment-svc.yaml'
-                sh 'kubectl get all'
-                sh 'sleep 20'
-                sh 'kubectl get svc -o wide'
-                echo ".war application deployed to EKS cluster successfully!!"
-
-                //sh 'kubectl apply -f k8s-deployment.yaml'
-                //echo "Application Deployed to EKS Successfully!!"
-            }
-        }
-
-
-
-
-
-
-
     }
-
-
 
     post {
         success {
-            echo 'pipeline is successful'
+            echo 'Pipeline completed successfully.'
         }
         failure {
-            echo 'pipeline is FAILED'
+            echo 'Pipeline failed.'
         }
     }
 }
