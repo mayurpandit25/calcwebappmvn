@@ -21,18 +21,17 @@ pipeline {
                 sh '''
                 ls -la
                 mvn clean package
-                ls -la '''
+                ls -la target
+                '''
             }
-
             post {
                 success {
-                    archiveArtifacts 'target/*.war'
-                    sh 'ls -la'
+                    archiveArtifacts artifacts: 'target/*.war'
                 }
             }
         }
 
-        stage('sonarqube analysis') {
+        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar') {
                     sh 'mvn sonar:sonar'
@@ -47,6 +46,7 @@ pipeline {
                         try {
                             def qg = waitForQualityGate()
                             echo "Quality Gate Status: ${qg.status}"
+
                             if (qg.status != 'OK') {
                                 error "Quality Gate failed: ${qg.status}"
                             }
@@ -59,15 +59,14 @@ pipeline {
             }
         }
 
-        stage('next stage') {
+        stage('SonarQube Report') {
             steps {
                 sh 'ls -la'
                 echo 'SonarQube analysis completed'
-               // sh 'cat target/sonar/report-task.txt'
             }
         }
 
-        stage('docker build') {
+        stage('Docker Build and Push') {
             steps {
                 sh '''
                 ls -la
@@ -77,7 +76,7 @@ pipeline {
             }
         }
 
-        stage('docker push to ECR') {
+        stage('Docker push to ECR') {
             steps {
                 sh '''
                 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 632295789918.dkr.ecr.us-west-2.amazonaws.com
@@ -87,20 +86,20 @@ pipeline {
             }
         }
 
-        stage('deploy to kubernetes') {
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                aws eks update-kubeconfig --name my-cluster-mp --region us-west-2
+                aws eks update-kubeconfig --name my-cluster-mayur --region us-west-2
                 kubectl apply -f calc-deployment-svc.yaml
                 kubectl get all
                 '''
             }
         }
 
-        stage('deployment verification') {
+        stage(Deployment Verification) {
             steps {
                 sh '''
-                kubectl get all
+                kubectl get all 
                 kubectl get pods
                 sleep 10
                 kubectl get svc -o wide
@@ -108,13 +107,12 @@ pipeline {
             }
         }
     }
-
     post {
         success {
-            echo 'Pipeline completed successfully.'
+            echo 'Pipeline execution completed.'
         }
-        failure {
-            echo 'Pipeline failed.'
+        error {
+            echo 'Pipeline execution failed.'
         }
     }
 }
