@@ -96,7 +96,7 @@ pipeline {
             }
         }
 
-        stage(Deployment Verification) {
+        stage('Deployment Verification') {
             steps {
                 sh '''
                 kubectl get all 
