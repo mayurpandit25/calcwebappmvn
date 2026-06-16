@@ -111,7 +111,7 @@ pipeline {
         success {
             echo 'Pipeline execution completed.'
         }
-        error {
+        failure {
             echo 'Pipeline execution failed.'
         }
     }
