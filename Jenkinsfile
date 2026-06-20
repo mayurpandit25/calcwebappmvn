@@ -19,19 +19,20 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                ls -la
+                ls -al
                 mvn clean package
-                ls -la target
                 '''
             }
+
             post {
                 success {
-                    archiveArtifacts artifacts: 'target/*.war'
+                    archiveArtifacts 'target/*.war'
+                    sh 'ls -la'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('sonarqube analysis') {
             steps {
                 withSonarQubeEnv('sonar') {
                     sh 'mvn sonar:sonar'
@@ -46,7 +47,6 @@ pipeline {
                         try {
                             def qg = waitForQualityGate()
                             echo "Quality Gate Status: ${qg.status}"
-
                             if (qg.status != 'OK') {
                                 error "Quality Gate failed: ${qg.status}"
                             }
@@ -66,7 +66,7 @@ pipeline {
             }
         }
 
-        stage('Docker Build and Push') {
+        stage('Docker Build') {
             steps {
                 sh '''
                 ls -la
@@ -76,12 +76,12 @@ pipeline {
             }
         }
 
-        stage('Docker push to ECR') {
+        stage('docker push to ECR') {
             steps {
                 sh '''
-                aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 632295789918.dkr.ecr.us-west-2.amazonaws.com
-                docker tag calc:v1 632295789918.dkr.ecr.us-west-2.amazonaws.com/app_cal:latest
-                docker push 632295789918.dkr.ecr.us-west-2.amazonaws.com/app_cal:latest
+                aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 632295789918.dkr.ecr.us-east-2.amazonaws.com
+                docker tag calc:v1 632295789918.dkr.ecr.us-east-2.amazonaws.com/app_cal:latest
+                docker push 632295789918.dkr.ecr.us-east-2.amazonaws.com/app_cal:latest
                 '''
             }
         }
@@ -89,30 +89,22 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                aws eks update-kubeconfig --name my-cluster-mayur --region us-west-2
+                aws eks update-kubeconfig --name my-cluster-mayur --region us-east-2
                 kubectl apply -f calc-deployment-svc.yaml
                 kubectl get all
                 '''
             }
         }
 
-        stage('Deployment Verification') {
+        stage('deployment verification') {
             steps {
                 sh '''
-                kubectl get all 
+                kubectl get all
                 kubectl get pods
                 sleep 10
                 kubectl get svc -o wide
                 '''
             }
-        }
-    }
-    post {
-        success {
-            echo 'Pipeline execution completed.'
-        }
-        failure {
-            echo 'Pipeline execution failed.'
         }
     }
 }
