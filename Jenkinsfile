@@ -36,7 +36,7 @@ pipeline {
 
         stage('artifact to s3') {
             steps {
-                sh 'aws s3 cp target/calcwebapp.war s3://mayur-s3-bucket-amazon-123456/ --recursive'
+                sh 'aws s3 cp /var/lib/jenkins/workspace/application-pipeline/target/calcwebapp.war s3://mayur-s3-bucket-amazon-123456/'
             }
         }
     }
