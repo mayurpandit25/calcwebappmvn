@@ -5,6 +5,10 @@ pipeline {
         maven 'maven1'
     }
 
+    environment {
+        my-aws-credential = credentials('aws-access')
+    }
+
     stages {
         stage('checkout') {
             steps {
@@ -27,6 +31,12 @@ pipeline {
                     archiveArtifacts 'target/*.war'
                     sh 'ls -la'
                 }
+            }
+        }
+
+        stage('artifact to s3') {
+            steps {
+                sh 'aws s3 cp target/calcwebapp.war s3://mayur-s3-bucket-amazon-123456/ --recursive'
             }
         }
     }
