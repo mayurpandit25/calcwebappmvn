@@ -39,5 +39,14 @@ pipeline {
                 sh 'aws s3 cp /var/lib/jenkins/workspace/application-pipeline/target/calcwebapp.war s3://mayur-s3-bucket-amazon-123456/'
             }
         }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
     }
 }
+
