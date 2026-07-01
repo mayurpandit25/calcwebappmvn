@@ -10,7 +10,7 @@ pipeline {
     }
 
     stages {
-        stage('checkout') {
+        stage('Checkout') {
             steps {
                 git 'https://github.com/mayurpandit25/calcwebappmvn.git'
                 echo 'clonning is successful'
@@ -34,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('artifact to s3') {
+        stage('Artifact to S3') {
             steps {
                 sh 'aws s3 cp /var/lib/jenkins/workspace/application-pipeline/target/calcwebapp.war s3://mayur-s3-bucket-amazon-123456/'
             }
@@ -72,6 +72,17 @@ pipeline {
                 script {
                     echo "SonarQube Report successfully generated"
                 }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh '''
+                ls -la
+                docker build -t calwebapp:v1 .
+                ls -la
+                docker images
+                '''
             }
         }
     }
