@@ -85,6 +85,18 @@ pipeline {
                 '''
             }
         }
+
+        stage('Docker push to ECR') {
+            steps {
+                sh '''
+                aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 506995420953.dkr.ecr.us-west-2.amazonaws.com
+                docker tag calwebapp:v1 506995420953.dkr.ecr.us-west-2.amazonaws.com/app_cal:latest
+                docker push 506995420953.dkr.ecr.us-west-2.amazonaws.com/app_cal:latest
+                '''
+            }
+        }
     }
 }
+
+
 
