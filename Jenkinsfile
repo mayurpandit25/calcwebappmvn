@@ -95,6 +95,26 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                aws eks update-kubeconfig --name my-cluster-mayur --region us-west-2
+                kubectl apply -f calc-deployment-svc.yaml
+                kubectl get pods
+                sleep 30
+                kubectl get svc
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully.'
+        }
+        failure {
+            echo 'Pipeline execution failed.'
+        }
     }
 }
-
