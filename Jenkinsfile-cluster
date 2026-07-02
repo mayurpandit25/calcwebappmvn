@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        my_aws_access= credentials('aws-access')
+        my_aws_access = credentials('aws-access')
     }
 
     tools {
@@ -15,6 +15,7 @@ pipeline {
                 sh 'terraform init'
             }
         }
+
          stage('Terraform fmt-validate') {
             steps {
                 sh '''
@@ -23,11 +24,13 @@ pipeline {
                 '''
             }
         }
+
          stage('Terraform plan') {
             steps {
                 sh 'terraform plan'
             }
         }
+
          stage('Terraform APPLY') {
             steps {
                 sh 'terraform apply -auto-approve'
@@ -35,3 +38,5 @@ pipeline {
         }
     }
 }
+
+

@@ -11,15 +11,16 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region = "us-west-2"
 }
+
 data "aws_vpc" "default" { // Fetch default VPC
   default = true
 }
+
 variable "cluster_name" { // Variable for cluster name
   type    = string
   default = "my-cluster-mayur"
-
 }
 
 data "aws_subnets" "default" { // Fetch  all subnets in the default VPC
@@ -27,7 +28,6 @@ data "aws_subnets" "default" { // Fetch  all subnets in the default VPC
     name   = "vpc-id"  //   Filter by VPC ID
     values = [data.aws_vpc.default.id]  // Filter by default VPC ID
   }
-
 }
 
 resource "aws_iam_role" "eks_cluster_role" { // IAM role for EKS cluster
